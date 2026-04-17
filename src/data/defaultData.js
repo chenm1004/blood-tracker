@@ -1,0 +1,66 @@
+export const defaultCategories = [
+  {
+    id: 'blood',
+    name: '血常规+血糖',
+    sortOrder: 0,
+    isDefault: true,
+    indicators: [
+      { id: 'wbc', name: '白细胞计数', shortName: 'WBC', unit: '×10⁹/L', refMin: 3.5, refMax: 9.5, isCore: true, sortOrder: 0 },
+      { id: 'rbc', name: '红细胞计数', shortName: 'RBC', unit: '×10¹²/L', refMin: 4.3, refMax: 5.8, isCore: true, sortOrder: 1 },
+      { id: 'hgb', name: '血红蛋白', shortName: 'HGB', unit: 'g/L', refMin: 130, refMax: 175, isCore: true, sortOrder: 2 },
+      { id: 'plt', name: '血小板计数', shortName: 'PLT', unit: '×10⁹/L', refMin: 125, refMax: 350, isCore: true, sortOrder: 3 },
+      { id: 'neut_abs', name: '中性粒细胞绝对值', shortName: 'NEUT#', unit: '×10⁹/L', refMin: 1.8, refMax: 6.3, isCore: true, sortOrder: 4 },
+      { id: 'glu', name: '血糖', shortName: 'GLU', unit: 'mmol/L', refMin: 3.9, refMax: 6.1, isCore: true, sortOrder: 5 },
+      { id: 'neut_pct', name: '中性粒细胞百分比', shortName: 'NEUT%', unit: '%', refMin: 40, refMax: 75, isCore: false, sortOrder: 6 },
+      { id: 'lym_pct', name: '淋巴细胞百分比', shortName: 'LYM%', unit: '%', refMin: 20, refMax: 50, isCore: false, sortOrder: 7 },
+      { id: 'lym_abs', name: '淋巴细胞绝对值', shortName: 'LYM#', unit: '×10⁹/L', refMin: 1.1, refMax: 3.2, isCore: false, sortOrder: 8 },
+      { id: 'mono_pct', name: '单核细胞百分比', shortName: 'MONO%', unit: '%', refMin: 3, refMax: 10, isCore: false, sortOrder: 9 },
+      { id: 'mono_abs', name: '单核细胞绝对值', shortName: 'MONO#', unit: '×10⁹/L', refMin: 0.1, refMax: 0.6, isCore: false, sortOrder: 10 },
+      { id: 'eo_pct', name: '嗜酸性粒细胞百分比', shortName: 'EO%', unit: '%', refMin: 0.4, refMax: 8, isCore: false, sortOrder: 11 },
+      { id: 'eo_abs', name: '嗜酸性粒细胞绝对值', shortName: 'EO#', unit: '×10⁹/L', refMin: 0.02, refMax: 0.52, isCore: false, sortOrder: 12 },
+      { id: 'baso_pct', name: '嗜碱性粒细胞百分比', shortName: 'BASO%', unit: '%', refMin: 0, refMax: 1, isCore: false, sortOrder: 13 },
+      { id: 'baso_abs', name: '嗜碱性粒细胞绝对值', shortName: 'BASO#', unit: '×10⁹/L', refMin: 0, refMax: 0.06, isCore: false, sortOrder: 14 },
+      { id: 'hct', name: '红细胞压积', shortName: 'HCT', unit: '%', refMin: 40, refMax: 50, isCore: false, sortOrder: 15 },
+      { id: 'mcv', name: '平均红细胞体积', shortName: 'MCV', unit: 'fL', refMin: 82, refMax: 100, isCore: false, sortOrder: 16 },
+      { id: 'mch', name: '平均红细胞血红蛋白含量', shortName: 'MCH', unit: 'pg', refMin: 27, refMax: 34, isCore: false, sortOrder: 17 },
+      { id: 'mchc', name: '平均红细胞血红蛋白浓度', shortName: 'MCHC', unit: 'g/L', refMin: 316, refMax: 354, isCore: false, sortOrder: 18 },
+      { id: 'rdw_cv', name: '红细胞分布宽度-CV', shortName: 'RDW-CV', unit: '%', refMin: 11, refMax: 16, isCore: false, sortOrder: 19 },
+      { id: 'rdw_sd', name: '红细胞分布宽度-SD', shortName: 'RDW-SD', unit: 'fL', refMin: 35, refMax: 56, isCore: false, sortOrder: 20 },
+      { id: 'mpv', name: '平均血小板体积', shortName: 'MPV', unit: 'fL', refMin: 6.5, refMax: 12, isCore: false, sortOrder: 21 },
+      { id: 'pdw', name: '血小板分布宽度', shortName: 'PDW', unit: 'fL', refMin: 9, refMax: 17, isCore: false, sortOrder: 22 },
+    ]
+  },
+  {
+    id: 'liver',
+    name: '肝功',
+    sortOrder: 1,
+    isDefault: true,
+    indicators: [
+      { id: 'alt', name: '谷丙转氨酶', shortName: 'ALT', unit: 'U/L', refMin: 7, refMax: 40, isCore: true, sortOrder: 0 },
+      { id: 'ast', name: '谷草转氨酶', shortName: 'AST', unit: 'U/L', refMin: 13, refMax: 35, isCore: true, sortOrder: 1 },
+      { id: 'tbil', name: '总胆红素', shortName: 'TBIL', unit: 'μmol/L', refMin: 3.4, refMax: 17.1, isCore: true, sortOrder: 2 },
+      { id: 'dbil', name: '直接胆红素', shortName: 'DBIL', unit: 'μmol/L', refMin: 0, refMax: 6.8, isCore: false, sortOrder: 3 },
+      { id: 'ibil', name: '间接胆红素', shortName: 'IBIL', unit: 'μmol/L', refMin: 1.7, refMax: 10.2, isCore: false, sortOrder: 4 },
+      { id: 'tp', name: '总蛋白', shortName: 'TP', unit: 'g/L', refMin: 65, refMax: 85, isCore: false, sortOrder: 5 },
+      { id: 'alb', name: '白蛋白', shortName: 'ALB', unit: 'g/L', refMin: 40, refMax: 55, isCore: false, sortOrder: 6 },
+      { id: 'glo', name: '球蛋白', shortName: 'GLO', unit: 'g/L', refMin: 20, refMax: 40, isCore: false, sortOrder: 7 },
+      { id: 'ag', name: '白球比', shortName: 'A/G', unit: '', refMin: 1.2, refMax: 2.4, isCore: false, sortOrder: 8 },
+      { id: 'ggt', name: 'γ-谷氨酰转肽酶', shortName: 'GGT', unit: 'U/L', refMin: 10, refMax: 60, isCore: false, sortOrder: 9 },
+      { id: 'alp', name: '碱性磷酸酶', shortName: 'ALP', unit: 'U/L', refMin: 45, refMax: 125, isCore: false, sortOrder: 10 },
+    ]
+  },
+  {
+    id: 'kidney',
+    name: '肾功',
+    sortOrder: 2,
+    isDefault: true,
+    indicators: [
+      { id: 'cr', name: '肌酐', shortName: 'Cr', unit: 'μmol/L', refMin: 57, refMax: 97, isCore: true, sortOrder: 0 },
+      { id: 'bun', name: '尿素氮', shortName: 'BUN', unit: 'mmol/L', refMin: 3.1, refMax: 8.0, isCore: true, sortOrder: 1 },
+      { id: 'ua', name: '尿酸', shortName: 'UA', unit: 'μmol/L', refMin: 208, refMax: 428, isCore: true, sortOrder: 2 },
+      { id: 'cysc', name: '胱抑素C', shortName: 'CysC', unit: 'mg/L', refMin: 0.51, refMax: 1.09, isCore: false, sortOrder: 3 },
+      { id: 'b2mg', name: 'β2-微球蛋白', shortName: 'β2-MG', unit: 'mg/L', refMin: 1.0, refMax: 3.0, isCore: false, sortOrder: 4 },
+      { id: 'egfr', name: '肾小球滤过率', shortName: 'eGFR', unit: 'mL/min/1.73m²', refMin: 90, refMax: 120, isCore: false, sortOrder: 5 },
+    ]
+  }
+];
