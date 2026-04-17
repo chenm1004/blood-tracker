@@ -266,7 +266,6 @@ function RecordForm({ categories, onSave, editingRecord, onCancel }) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               className="hidden"
               onChange={handleScan}
             />
