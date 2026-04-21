@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { defaultCategories } from './data/defaultData';
 import LoginScreen from './components/LoginScreen';
 import Dashboard from './components/Dashboard';
@@ -6,105 +6,95 @@ import RecordForm from './components/RecordForm';
 import RecordHistory from './components/RecordHistory';
 import Medications from './components/Medications';
 import Settings from './components/Settings';
-import { LayoutDashboard, PlusCircle, ClipboardList, Pill, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, ClipboardList, Pill, Settings as SettingsIcon, Loader2 } from 'lucide-react';
+import * as api from './api';
 
 function App() {
-  // ========== 用户列表（全局共享） ==========
-  const [users, setUsers] = useState(() => {
-    try {
-      const saved = localStorage.getItem('app_users');
-      if (saved) return JSON.parse(saved);
-      const oldPin = localStorage.getItem('app_pin') || '1234';
-      return [{ id: 'user1', name: '用户1', pin: oldPin, avatar: '👤' }];
-    } catch {
-      return [{ id: 'user1', name: '用户1', pin: '1234', avatar: '👤' }];
-    }
-  });
+  // ========== 加载状态 ==========
+  const [loading, setLoading] = useState(true);
+  const [loadingMsg, setLoadingMsg] = useState('正在加载用户列表…');
 
+  // ========== 用户 ==========
+  const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem('app_users', JSON.stringify(users));
-  }, [users]);
-
-  // ========== 用户维度数据 ==========
+  // ========== 业务数据 ==========
   const [activePage, setActivePage] = useState('dashboard');
   const [categories, setCategories] = useState(defaultCategories);
   const [records, setRecords] = useState([]);
   const [medications, setMedications] = useState([]);
   const [editingRecord, setEditingRecord] = useState(null);
 
-  // 登录后加载该用户数据
+  // ========== 启动时从 Supabase 拉取用户列表 ==========
+  useEffect(() => {
+    (async () => {
+      const fetched = await api.fetchUsers();
+      setUsers(fetched);
+      setLoading(false);
+    })();
+  }, []);
+
+  // ========== 登录后拉取该用户的全部数据 ==========
   useEffect(() => {
     if (!currentUser) {
       setDataLoaded(false);
       return;
     }
-    const p = currentUser.id;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadingMsg('正在加载数据…');
 
-    // 迁移旧版单用户数据到 user1
-    if (p === 'user1' && !localStorage.getItem(`${p}_bt_records`) && localStorage.getItem('bt_records')) {
-      ['bt_categories', 'bt_records', 'bt_medications'].forEach(key => {
-        const old = localStorage.getItem(key);
-        if (old) {
-          localStorage.setItem(`${p}_${key}`, old);
-          localStorage.removeItem(key);
-        }
-      });
-    }
+      const [fetchedRecords, fetchedMeds, fetchedCats] = await Promise.all([
+        api.fetchRecords(currentUser.id),
+        api.fetchMedications(currentUser.id),
+        api.fetchCategories(currentUser.id),
+      ]);
 
-    const load = (key, fallback) => {
-      try {
-        const saved = localStorage.getItem(`${p}_${key}`);
-        return saved ? JSON.parse(saved) : fallback;
-      } catch { return fallback; }
-    };
-
-    setCategories(load('bt_categories', defaultCategories));
-    setRecords(load('bt_records', []));
-    setMedications(load('bt_medications', []));
-    setDataLoaded(true);
-    setActivePage('dashboard');
+      if (cancelled) return;
+      setRecords(fetchedRecords);
+      setMedications(fetchedMeds);
+      setCategories(fetchedCats || defaultCategories);
+      setDataLoaded(true);
+      setActivePage('dashboard');
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
   }, [currentUser]);
 
-  // 持久化（仅在数据加载完成后）
-  useEffect(() => {
-    if (!currentUser || !dataLoaded) return;
-    localStorage.setItem(`${currentUser.id}_bt_categories`, JSON.stringify(categories));
-  }, [categories, currentUser, dataLoaded]);
-
-  useEffect(() => {
-    if (!currentUser || !dataLoaded) return;
-    localStorage.setItem(`${currentUser.id}_bt_records`, JSON.stringify(records));
-  }, [records, currentUser, dataLoaded]);
-
-  useEffect(() => {
-    if (!currentUser || !dataLoaded) return;
-    localStorage.setItem(`${currentUser.id}_bt_medications`, JSON.stringify(medications));
-  }, [medications, currentUser, dataLoaded]);
-
   // ========== 用户管理 ==========
-  const addUser = (userData) => {
-    const newUser = { ...userData, id: 'user_' + Date.now() };
+  const addUser = async (userData) => {
+    const newUser = {
+      id: 'user_' + Date.now(),
+      name: userData.name,
+      avatar: userData.avatar,
+      pin: userData.pin,
+    };
+    // 乐观更新：先在本地加上，再写远端
     setUsers(prev => [...prev, newUser]);
+    const created = await api.createUser(newUser);
+    if (created) {
+      await api.saveCategories(created.id, defaultCategories);
+    } else {
+      // 远端失败则回滚
+      setUsers(prev => prev.filter(u => u.id !== newUser.id));
+    }
     return newUser;
   };
 
-  const updateUser = (id, updates) => {
+  const updateUser = async (id, updates) => {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
     if (currentUser?.id === id) {
       setCurrentUser(prev => ({ ...prev, ...updates }));
     }
+    await api.updateUser(id, updates);
   };
 
-  const deleteUser = (id) => {
-    if (users.length <= 1) return;
-    if (currentUser?.id === id) return;
+  const deleteUser = async (id) => {
+    if (users.length <= 1 || currentUser?.id === id) return;
     setUsers(prev => prev.filter(u => u.id !== id));
-    ['bt_categories', 'bt_records', 'bt_medications'].forEach(key => {
-      localStorage.removeItem(`${id}_${key}`);
-    });
+    await api.deleteUserFromDB(id);
   };
 
   const handleLogin = (user) => setCurrentUser(user);
@@ -114,19 +104,44 @@ function App() {
     setEditingRecord(null);
   };
 
-  // ========== 记录操作 ==========
-  const addRecord = (record) => {
-    setRecords(prev => [...prev, { ...record, id: crypto.randomUUID(), createdAt: new Date().toISOString() }]);
+  // ========== 分类修改时自动同步 Supabase ==========
+  const handleSetCategories = useCallback((updater) => {
+    setCategories(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      if (currentUser) {
+        api.saveCategories(currentUser.id, next);
+      }
+      return next;
+    });
+  }, [currentUser]);
+
+  // ========== 检验记录操作 ==========
+  const addRecord = async (record) => {
+    const newRecord = {
+      ...record,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+    };
+    const created = await api.createRecord(currentUser.id, newRecord);
+    if (created) {
+      setRecords(prev => [...prev, created]);
+    }
     setActivePage('history');
   };
 
-  const updateRecord = (updatedRecord) => {
-    setRecords(prev => prev.map(r => r.id === editingRecord.id ? { ...r, ...updatedRecord } : r));
+  const updateRecord = async (updatedRecord) => {
+    await api.updateRecordInDB(editingRecord.id, updatedRecord);
+    setRecords(prev => prev.map(r =>
+      r.id === editingRecord.id ? { ...r, ...updatedRecord } : r
+    ));
     setEditingRecord(null);
     setActivePage('history');
   };
 
-  const deleteRecord = (id) => setRecords(prev => prev.filter(r => r.id !== id));
+  const deleteRecord = async (id) => {
+    await api.deleteRecordFromDB(id);
+    setRecords(prev => prev.filter(r => r.id !== id));
+  };
 
   const handleEditRecord = (record) => {
     setEditingRecord(record);
@@ -134,11 +149,39 @@ function App() {
   };
 
   // ========== 用药操作 ==========
-  const addMedication = (med) => setMedications(prev => [...prev, { ...med, id: crypto.randomUUID() }]);
-  const updateMedication = (id, med) => setMedications(prev => prev.map(m => m.id === id ? { ...m, ...med } : m));
-  const deleteMedication = (id) => setMedications(prev => prev.filter(m => m.id !== id));
+  const addMedication = async (med) => {
+    const newMed = { ...med, id: crypto.randomUUID() };
+    const created = await api.createMedication(currentUser.id, newMed);
+    if (created) {
+      setMedications(prev => [...prev, created]);
+    }
+  };
+
+  const updateMedication = async (id, med) => {
+    await api.updateMedicationInDB(id, med);
+    setMedications(prev => prev.map(m => m.id === id ? { ...m, ...med } : m));
+  };
+
+  const deleteMedication = async (id) => {
+    await api.deleteMedicationFromDB(id);
+    setMedications(prev => prev.filter(m => m.id !== id));
+  };
 
   // ========== 渲染 ==========
+
+  // 初始加载 & 登录后加载
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-white">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-3" />
+          <p className="text-sm text-gray-500">{loadingMsg}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未登录
   if (!currentUser) {
     return <LoginScreen users={users} onLogin={handleLogin} onAddUser={addUser} />;
   }
@@ -178,7 +221,7 @@ function App() {
         return (
           <Settings
             categories={categories}
-            setCategories={setCategories}
+            setCategories={handleSetCategories}
             currentUser={currentUser}
             users={users}
             onUpdateUser={updateUser}
@@ -202,7 +245,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 顶部用户栏 */}
       <div className="bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-2">
           <div className="flex items-center gap-2">
