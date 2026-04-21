@@ -7,7 +7,7 @@ import RecordHistory from './components/RecordHistory';
 import Medications from './components/Medications';
 import Settings from './components/Settings';
 import { LayoutDashboard, PlusCircle, ClipboardList, Pill, Settings as SettingsIcon, Loader2 } from 'lucide-react';
-import * as api from './api';
+import * as api from './lib/api';
 
 function App() {
   // ========== 加载状态 ==========
